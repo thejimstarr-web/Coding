@@ -3,8 +3,8 @@
 /* ---- Club location: Kalamunda, WA (adjust if your range is elsewhere) ---- */
 const CLUB = {
   name: "Kalamunda Governor Stirling Archers",
-  lat: -31.9707,
-  lon: 116.0658,
+  lat: -31.947258519626708,
+  lon: 116.02860491761463,
   timezone: "Australia/Perth",
 };
 
