@@ -181,6 +181,18 @@ body {
   margin-bottom: 8px;
 }
 
+.verdict-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .verdict-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .hourly-chart {
   display: flex;
   align-items: flex-end;

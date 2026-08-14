@@ -29,8 +29,10 @@ const els = {
   windDir: document.getElementById("wind-dir"),
   temperature: document.getElementById("temperature"),
   refreshBtn: document.getElementById("refresh-btn"),
-  verdictBadge: document.getElementById("verdict-badge"),
-  verdictText: document.getElementById("verdict-text"),
+  weatherVerdictBadge: document.getElementById("weather-verdict-badge"),
+  weatherVerdictText: document.getElementById("weather-verdict-text"),
+  daylightVerdictBadge: document.getElementById("daylight-verdict-badge"),
+  daylightVerdictText: document.getElementById("daylight-verdict-text"),
   recTimes: document.getElementById("rec-times"),
   recBows: document.getElementById("rec-bows"),
   recDistances: document.getElementById("rec-distances"),
@@ -213,10 +215,7 @@ function buildDistanceRecommendations(windCat) {
   }
 }
 
-function buildVerdict(windCat, tempC, isDaylight) {
-  if (!isDaylight) {
-    return { level: "bad", text: "Outside daylight hours — outdoor shooting isn't recommended right now." };
-  }
+function buildWeatherVerdict(windCat, tempC) {
   if (windCat.key === "very-strong") {
     return { level: "bad", text: "Wind is too strong for outdoor shooting — move indoors or stand down." };
   }
@@ -229,7 +228,19 @@ function buildVerdict(windCat, tempC, isDaylight) {
   if (windCat.key === "moderate") {
     return { level: "ok", text: "Good shooting conditions with minor adjustments for wind." };
   }
-  return { level: "good", text: "Great conditions for outdoor shooting." };
+  return { level: "good", text: "Great wind and temperature for outdoor shooting." };
+}
+
+function buildDaylightVerdict(isDaylight, sunriseISO, sunsetISO) {
+  if (isDaylight) {
+    return { level: "good", text: "It's currently daylight — safe to shoot outdoors." };
+  }
+  const sunrise = formatLocalTime(sunriseISO, CLUB.timezone);
+  const sunset = formatLocalTime(sunsetISO, CLUB.timezone);
+  return {
+    level: "bad",
+    text: `It's outside today's daylight window (sunrise ${sunrise}, sunset ${sunset}) — outdoor shooting isn't recommended.`,
+  };
 }
 
 const BOW_LABELS = {
@@ -390,11 +401,16 @@ async function loadWeather() {
 
     const windCat = windCategory(windKmh);
     const season = getSeason(now, CLUB.timezone);
-    const verdict = buildVerdict(windCat, tempC, isDaylight);
+    const weatherVerdict = buildWeatherVerdict(windCat, tempC);
+    const daylightVerdict = buildDaylightVerdict(isDaylight, sunriseISO, sunsetISO);
 
-    els.verdictBadge.textContent = `${windCat.label} · ${verdict.level.toUpperCase()}`;
-    els.verdictBadge.className = `badge ${verdict.level}`;
-    els.verdictText.textContent = verdict.text;
+    els.weatherVerdictBadge.textContent = `${windCat.label} · ${weatherVerdict.level.toUpperCase()}`;
+    els.weatherVerdictBadge.className = `badge ${weatherVerdict.level}`;
+    els.weatherVerdictText.textContent = weatherVerdict.text;
+
+    els.daylightVerdictBadge.textContent = `${isDaylight ? "Daytime" : "Night"} · ${daylightVerdict.level.toUpperCase()}`;
+    els.daylightVerdictBadge.className = `badge ${daylightVerdict.level}`;
+    els.daylightVerdictText.textContent = daylightVerdict.text;
 
     renderList(els.recTimes, buildTimeRecommendations(season, sunriseISO, sunsetISO, nowHour));
     renderList(els.recBows, buildBowRecommendations(windCat));
