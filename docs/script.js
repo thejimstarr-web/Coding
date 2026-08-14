@@ -40,6 +40,7 @@ const els = {
   hourlyChart: document.getElementById("hourly-chart"),
   bowButtons: document.getElementById("bow-buttons"),
   bowResult: document.getElementById("bow-result"),
+  shootsList: document.getElementById("shoots-list"),
 };
 
 /* Latest fetched conditions, kept around so the bow picker can react
@@ -111,6 +112,84 @@ function formatLocalTime(isoString, tz) {
     minute: "2-digit",
     hour12: false,
   });
+}
+
+/* ---------------- Upcoming shoots ---------------- */
+
+function localISODate(date, tz) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function formatShootDate(dateStr) {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString("en-AU", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function daysUntilLabel(dateStr, todayStr) {
+  const diffDays = Math.round(
+    (new Date(`${dateStr}T00:00:00`) - new Date(`${todayStr}T00:00:00`)) / 86400000
+  );
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  return `In ${diffDays} days`;
+}
+
+function renderUpcomingShoots() {
+  const todayStr = localISODate(new Date(), CLUB.timezone);
+  const upcoming = KGSA_SHOOTS.filter((s) => s.date >= todayStr).slice(0, 2);
+
+  els.shootsList.innerHTML = "";
+
+  if (upcoming.length === 0) {
+    els.shootsList.innerHTML =
+      '<div class="muted">No upcoming shoots listed — check back once the calendar is updated.</div>';
+    return;
+  }
+
+  for (const shoot of upcoming) {
+    const tile = document.createElement("div");
+    tile.className = "shoot-tile";
+
+    const when = document.createElement("div");
+    when.className = "shoot-when";
+    when.textContent = `${daysUntilLabel(shoot.date, todayStr)} · ${formatShootDate(shoot.date)}`;
+    tile.appendChild(when);
+
+    const name = document.createElement("div");
+    name.className = "shoot-name";
+    name.textContent = shoot.name;
+    tile.appendChild(name);
+
+    if (shoot.arrows) {
+      const arrows = document.createElement("div");
+      arrows.className = "shoot-detail";
+      arrows.textContent = `${shoot.arrows} arrows`;
+      tile.appendChild(arrows);
+    }
+    if (shoot.distance) {
+      const distance = document.createElement("div");
+      distance.className = "shoot-detail";
+      distance.textContent = shoot.distance;
+      tile.appendChild(distance);
+    }
+    if (shoot.face) {
+      const face = document.createElement("div");
+      face.className = "shoot-detail";
+      face.textContent = `Face size: ${shoot.face}cm`;
+      tile.appendChild(face);
+    }
+
+    els.shootsList.appendChild(tile);
+  }
 }
 
 /* ---------------- Recommendations ---------------- */
@@ -436,6 +515,9 @@ setInterval(tickClock, 1000);
 loadWeather();
 els.refreshBtn.addEventListener("click", loadWeather);
 setInterval(loadWeather, 5 * 60 * 1000); // auto-refresh every 5 minutes
+
+renderUpcomingShoots();
+setInterval(renderUpcomingShoots, 5 * 60 * 1000); // keeps "Today"/"Tomorrow" labels current
 
 els.bowButtons.addEventListener("click", (e) => {
   const btn = e.target.closest(".bow-btn");

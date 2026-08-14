@@ -193,6 +193,45 @@ body {
   }
 }
 
+.shoots-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.shoot-tile {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.shoot-when {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-2);
+}
+
+.shoot-name {
+  font-weight: 700;
+  margin: 4px 0 6px;
+}
+
+.shoot-detail {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 2px 0;
+}
+
+@media (max-width: 480px) {
+  .shoots-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 .hourly-chart {
   display: flex;
   align-items: flex-end;

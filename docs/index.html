@@ -29,6 +29,13 @@
     </div>
   </section>
 
+  <section class="card" id="shoots-card">
+    <div class="label">Upcoming KGSA shoots</div>
+    <div id="shoots-list" class="shoots-list">
+      <div class="muted">Loading…</div>
+    </div>
+  </section>
+
   <section class="card" id="weather-card">
     <div class="label">Current conditions at Kalamunda</div>
     <div id="weather-status" class="muted">Fetching live weather…</div>
@@ -108,11 +115,13 @@
       Wind &amp; weather data from <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>.
       Location set to Kalamunda, WA (adjust in <code>script.js</code> if your club range sits elsewhere).
       Guidance is general club-level advice, not an official World Archery ruling — always follow your
-      Range Officer's call on the day.
+      Range Officer's call on the day. Shoot calendar transcribed from the club's 2026 shoot
+      list — update <code>shoots.js</code> as new dates are confirmed.
     </p>
   </footer>
 
 </div>
+<script src="shoots.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -14,6 +14,8 @@ A simple static web app for the club that:
 - Lets you pick your bow type (recurve / compound / barebow / longbow) for
   a personalised distance and World Archery round suggestion given the
   current wind.
+- Shows the next two upcoming KGSA shoots from the club's 2026 calendar,
+  which automatically advance as each date passes.
 
 ## Running it
 
@@ -63,6 +65,14 @@ outdoor distances (90/70/60/50/40/30m) and the 18m/25m indoor distances.
 
 This is general club-level guidance, not an official ruling — always
 follow your Range Officer's call on the day.
+
+## Updating the shoot calendar
+
+`shoots.js` holds the full 2026 shoot list as a plain array of
+`{ date, name, arrows, distance, face }` objects (`date` is `YYYY-MM-DD`).
+The app always shows whichever two entries have the soonest date that
+hasn't passed yet — no other code needs to change as the year progresses.
+To add, remove, or correct a shoot, edit that array directly.
 
 ## Notes
 
