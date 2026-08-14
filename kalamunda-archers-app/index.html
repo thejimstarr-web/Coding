@@ -60,6 +60,12 @@
     <p id="verdict-text" class="muted"></p>
   </section>
 
+  <section class="card" id="outlook-card">
+    <div class="label">Today's hourly wind outlook</div>
+    <div id="best-window" class="muted">Loading…</div>
+    <div id="hourly-chart" class="hourly-chart"></div>
+  </section>
+
   <section class="recommendations">
     <div class="card rec-card">
       <h2>Recommended shooting times today</h2>
@@ -75,6 +81,17 @@
       <h2>Recommended distances</h2>
       <ul id="rec-distances" class="rec-list"><li>Loading…</li></ul>
     </div>
+  </section>
+
+  <section class="card" id="bow-picker-card">
+    <div class="label">Personalise: pick your bow</div>
+    <div class="bow-buttons" id="bow-buttons">
+      <button type="button" class="bow-btn" data-bow="recurve">Recurve</button>
+      <button type="button" class="bow-btn" data-bow="compound">Compound</button>
+      <button type="button" class="bow-btn" data-bow="barebow">Barebow</button>
+      <button type="button" class="bow-btn" data-bow="longbow">Longbow</button>
+    </div>
+    <div id="bow-result" class="bow-result muted">Pick a bow type above for a tailored distance and round suggestion.</div>
   </section>
 
   <footer class="app-footer">

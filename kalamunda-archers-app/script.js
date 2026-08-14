@@ -12,7 +12,9 @@ const WEATHER_URL =
   `https://api.open-meteo.com/v1/forecast` +
   `?latitude=${CLUB.lat}&longitude=${CLUB.lon}` +
   `&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation` +
+  `&hourly=wind_speed_10m` +
   `&daily=sunrise,sunset` +
+  `&forecast_days=1` +
   `&wind_speed_unit=kmh&timezone=${encodeURIComponent(CLUB.timezone)}`;
 
 const els = {
@@ -32,6 +34,19 @@ const els = {
   recTimes: document.getElementById("rec-times"),
   recBows: document.getElementById("rec-bows"),
   recDistances: document.getElementById("rec-distances"),
+  bestWindow: document.getElementById("best-window"),
+  hourlyChart: document.getElementById("hourly-chart"),
+  bowButtons: document.getElementById("bow-buttons"),
+  bowResult: document.getElementById("bow-result"),
+};
+
+/* Latest fetched conditions, kept around so the bow picker can react
+   without re-fetching. */
+const state = {
+  windCat: null,
+  tempC: null,
+  isDaylight: null,
+  selectedBow: null,
 };
 
 /* ---------------- Clock ---------------- */
@@ -217,6 +232,116 @@ function buildVerdict(windCat, tempC, isDaylight) {
   return { level: "good", text: "Great conditions for outdoor shooting." };
 }
 
+const BOW_LABELS = {
+  recurve: "Recurve",
+  compound: "Compound",
+  barebow: "Barebow",
+  longbow: "Longbow",
+};
+
+function buildRoundSuggestion(bow, windCat) {
+  const table = {
+    recurve: {
+      calm: "Full WA1440 or WA70 (70/60/50/30m) — great conditions for a long-distance round.",
+      light: "WA70 (70/60/50/30m) — still very shootable at full distance.",
+      moderate: "WA900 (60/50/40m) — step in from 70m if grouping opens up.",
+      strong: "30m practice only, or move to indoor 18m.",
+      "very-strong": "Indoor 18m round recommended.",
+    },
+    compound: {
+      calm: "Full WA1440 (50m) or WA70 (50m) — ideal precision conditions.",
+      light: "WA70 (50m) — holding steady.",
+      moderate: "WA900 (50/40/30m) — still comfortable for compound.",
+      strong: "50m with full stabilisation, or indoor 18m if the squad wants consistency.",
+      "very-strong": "Indoor 18m round recommended.",
+    },
+    barebow: {
+      calm: "WA900 (60/50/40m) or a full barebow round at 50m.",
+      light: "50m round — comfortable conditions.",
+      moderate: "Step in to 40/30m — drift builds quickly without sights.",
+      strong: "30m practice only.",
+      "very-strong": "Indoor 18m round recommended.",
+    },
+    longbow: {
+      calm: "Traditional round at 50/40/30m.",
+      light: "50/40/30m — pleasant conditions.",
+      moderate: "30m practice — expect real drift at longer distances.",
+      strong: "Not recommended outdoors — indoor 18m or stand down.",
+      "very-strong": "Indoor 18m round recommended, or stand the session down.",
+    },
+  };
+  return table[bow][windCat.key];
+}
+
+function renderBowResult(bow) {
+  if (!bow || !state.windCat) return;
+  const suggestion = buildRoundSuggestion(bow, state.windCat);
+  els.bowResult.innerHTML =
+    `<strong>${BOW_LABELS[bow]}</strong> in current ${state.windCat.label.toLowerCase()}: ${suggestion}`;
+}
+
+/* ---------------- Hourly outlook ---------------- */
+
+function renderHourlyOutlook(hourly, sunriseISO, sunsetISO) {
+  const sunriseHour = localHour(new Date(sunriseISO), CLUB.timezone);
+  const sunsetHour = localHour(new Date(sunsetISO), CLUB.timezone);
+
+  const daylightIdx = [];
+  hourly.time.forEach((t, i) => {
+    const hour = Number(t.slice(11, 13));
+    if (hour >= sunriseHour && hour <= sunsetHour) daylightIdx.push(i);
+  });
+
+  if (daylightIdx.length === 0) {
+    els.bestWindow.textContent = "No daylight hours remaining today.";
+    els.hourlyChart.innerHTML = "";
+    return;
+  }
+
+  // Find the 2-hour contiguous window with the lowest average wind.
+  let best = null;
+  for (let k = 0; k < daylightIdx.length - 1; k++) {
+    const i = daylightIdx[k];
+    const j = daylightIdx[k + 1];
+    const avg = (hourly.wind_speed_10m[i] + hourly.wind_speed_10m[j]) / 2;
+    if (!best || avg < best.avg) {
+      best = { startIdx: i, endIdx: j, avg };
+    }
+  }
+
+  const hourLabel = (idx) => hourly.time[idx].slice(11, 16);
+  const addHour = (label) => {
+    const [h, m] = label.split(":").map(Number);
+    return `${String((h + 1) % 24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  };
+  els.bestWindow.innerHTML = best
+    ? `Best 2-hour window: <strong>${hourLabel(best.startIdx)}–${addHour(hourLabel(best.endIdx))}</strong> (avg ${Math.round(best.avg)} km/h)`
+    : "";
+
+  const maxSpeed = Math.max(...daylightIdx.map((i) => hourly.wind_speed_10m[i]), 10);
+  els.hourlyChart.innerHTML = "";
+  for (const i of daylightIdx) {
+    const speed = hourly.wind_speed_10m[i];
+    const cat = windCategory(speed);
+    const col = document.createElement("div");
+    col.className = "hour-col";
+
+    const bar = document.createElement("div");
+    bar.className = `hour-bar ${cat.key}`;
+    if (best && (i === best.startIdx || i === best.endIdx)) bar.classList.add("best-hour");
+    bar.style.height = `${Math.min(90, Math.max(4, (speed / Math.max(maxSpeed, 20)) * 90))}px`;
+    bar.title = `${hourly.time[i].slice(11, 16)} — ${Math.round(speed)} km/h`;
+
+    const label = document.createElement("div");
+    label.className = "hour-label";
+    label.textContent = hourly.time[i].slice(11, 13);
+
+    col.appendChild(bar);
+    col.appendChild(label);
+    els.hourlyChart.appendChild(col);
+  }
+}
+
 function renderList(el, items) {
   el.innerHTML = "";
   for (const item of items) {
@@ -274,6 +399,12 @@ async function loadWeather() {
     renderList(els.recTimes, buildTimeRecommendations(season, sunriseISO, sunsetISO, nowHour));
     renderList(els.recBows, buildBowRecommendations(windCat));
     renderList(els.recDistances, buildDistanceRecommendations(windCat));
+    renderHourlyOutlook(data.hourly, sunriseISO, sunsetISO);
+
+    state.windCat = windCat;
+    state.tempC = tempC;
+    state.isDaylight = isDaylight;
+    if (state.selectedBow) renderBowResult(state.selectedBow);
   } catch (err) {
     els.weatherStatus.textContent =
       `Couldn't load live weather (${err.message}). Check your connection and try again.`;
@@ -289,3 +420,16 @@ setInterval(tickClock, 1000);
 loadWeather();
 els.refreshBtn.addEventListener("click", loadWeather);
 setInterval(loadWeather, 5 * 60 * 1000); // auto-refresh every 5 minutes
+
+els.bowButtons.addEventListener("click", (e) => {
+  const btn = e.target.closest(".bow-btn");
+  if (!btn) return;
+  els.bowButtons.querySelectorAll(".bow-btn").forEach((b) => b.classList.remove("selected"));
+  btn.classList.add("selected");
+  state.selectedBow = btn.dataset.bow;
+  if (state.windCat) {
+    renderBowResult(state.selectedBow);
+  } else {
+    els.bowResult.textContent = "Still loading current conditions…";
+  }
+});

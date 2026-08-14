@@ -181,6 +181,89 @@ body {
   margin-bottom: 8px;
 }
 
+.hourly-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 110px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.hour-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1 0 28px;
+  height: 100%;
+  min-width: 28px;
+}
+
+.hour-bar {
+  width: 14px;
+  border-radius: 4px 4px 0 0;
+  background: var(--accent);
+  min-height: 3px;
+}
+
+.hour-bar.calm { background: var(--good); }
+.hour-bar.light { background: var(--good); }
+.hour-bar.moderate { background: var(--ok); }
+.hour-bar.strong { background: var(--bad); }
+.hour-bar.very-strong { background: var(--bad); }
+
+.hour-bar.best-hour {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 1px;
+}
+
+.hour-label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.bow-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.bow-btn {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.bow-btn:hover {
+  border-color: var(--accent);
+}
+
+.bow-btn.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.bow-result {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.bow-result strong {
+  color: var(--ink);
+}
+
 .app-footer {
   text-align: center;
   color: var(--muted);

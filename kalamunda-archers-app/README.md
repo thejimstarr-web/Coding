@@ -3,12 +3,17 @@
 A simple static web app for the club that:
 
 - Shows the current date and time in Perth, WA.
-- Fetches live wind speed, gusts, direction and temperature for Kalamunda
-  from [Open-Meteo](https://open-meteo.com) (free, no API key required).
+- Fetches live wind speed, gusts, direction and temperature for the club's
+  range from [Open-Meteo](https://open-meteo.com) (free, no API key required).
 - Works out whether it's currently daylight (using today's sunrise/sunset).
 - Gives an overall shoot verdict (Good / OK / Not recommended).
 - Recommends shooting times, bow types, and distances based on current
   wind, temperature, season and daylight.
+- Shows an hourly wind outlook for the rest of today's daylight hours and
+  highlights the best 2-hour window to shoot.
+- Lets you pick your bow type (recurve / compound / barebow / longbow) for
+  a personalised distance and World Archery round suggestion given the
+  current wind.
 
 ## Running it
 
