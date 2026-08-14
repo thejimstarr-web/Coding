@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalamunda Governor Stirling Archers — Shoot Conditions</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <h1>Kalamunda Governor Stirling Archers</h1>
+    <p class="subtitle">Live shoot conditions &amp; recommendations</p>
+  </header>
+
+  <section class="card" id="clock-card">
+    <div class="clock-row">
+      <div>
+        <div class="label">Local date &amp; time (Perth, WA)</div>
+        <div id="current-time" class="big-value">--:--:--</div>
+        <div id="current-date" class="muted">Loading...</div>
+      </div>
+      <div>
+        <div class="label">Daylight</div>
+        <div id="daylight-status" class="big-value small">--</div>
+        <div id="daylight-window" class="muted">--</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="weather-card">
+    <div class="label">Current conditions at Kalamunda</div>
+    <div id="weather-status" class="muted">Fetching live weather…</div>
+
+    <div class="weather-grid" id="weather-grid" hidden>
+      <div class="weather-tile">
+        <div class="tile-label">Wind speed</div>
+        <div class="tile-value" id="wind-speed">--</div>
+      </div>
+      <div class="weather-tile">
+        <div class="tile-label">Gusts</div>
+        <div class="tile-value" id="wind-gusts">--</div>
+      </div>
+      <div class="weather-tile">
+        <div class="tile-label">Direction</div>
+        <div class="tile-value" id="wind-dir">--</div>
+      </div>
+      <div class="weather-tile">
+        <div class="tile-label">Temperature</div>
+        <div class="tile-value" id="temperature">--</div>
+      </div>
+    </div>
+    <button id="refresh-btn" type="button">Refresh conditions</button>
+  </section>
+
+  <section class="card" id="verdict-card">
+    <div class="label">Overall verdict</div>
+    <div id="verdict-badge" class="badge">--</div>
+    <p id="verdict-text" class="muted"></p>
+  </section>
+
+  <section class="recommendations">
+    <div class="card rec-card">
+      <h2>Recommended shooting times today</h2>
+      <ul id="rec-times" class="rec-list"><li>Loading…</li></ul>
+    </div>
+
+    <div class="card rec-card">
+      <h2>Recommended bow types</h2>
+      <ul id="rec-bows" class="rec-list"><li>Loading…</li></ul>
+    </div>
+
+    <div class="card rec-card">
+      <h2>Recommended distances</h2>
+      <ul id="rec-distances" class="rec-list"><li>Loading…</li></ul>
+    </div>
+  </section>
+
+  <footer class="app-footer">
+    <p>
+      Wind &amp; weather data from <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>.
+      Location set to Kalamunda, WA (adjust in <code>script.js</code> if your club range sits elsewhere).
+      Guidance is general club-level advice, not an official World Archery ruling — always follow your
+      Range Officer's call on the day.
+    </p>
+  </footer>
+
+</div>
+<script src="script.js"></script>
+</body>
+</html>
