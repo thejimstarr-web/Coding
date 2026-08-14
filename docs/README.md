@@ -15,7 +15,10 @@ A simple static web app for the club that:
   a personalised distance and World Archery round suggestion given the
   current wind.
 - Shows the next two upcoming KGSA shoots from the club's 2026 calendar,
-  which automatically advance as each date passes.
+  which automatically advance as each date passes, with an "Add to
+  calendar" button that downloads a `.ics` file for each one.
+- Shows UV index and rain chance for the current hour alongside wind and
+  temperature.
 
 ## Running it
 

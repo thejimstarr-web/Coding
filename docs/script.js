@@ -12,7 +12,7 @@ const WEATHER_URL =
   `https://api.open-meteo.com/v1/forecast` +
   `?latitude=${CLUB.lat}&longitude=${CLUB.lon}` +
   `&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation` +
-  `&hourly=wind_speed_10m` +
+  `&hourly=wind_speed_10m,uv_index,precipitation_probability` +
   `&daily=sunrise,sunset` +
   `&forecast_days=1` +
   `&wind_speed_unit=kmh&timezone=${encodeURIComponent(CLUB.timezone)}`;
@@ -28,6 +28,8 @@ const els = {
   windGusts: document.getElementById("wind-gusts"),
   windDir: document.getElementById("wind-dir"),
   temperature: document.getElementById("temperature"),
+  uvIndex: document.getElementById("uv-index"),
+  rainChance: document.getElementById("rain-chance"),
   refreshBtn: document.getElementById("refresh-btn"),
   weatherVerdictBadge: document.getElementById("weather-verdict-badge"),
   weatherVerdictText: document.getElementById("weather-verdict-text"),
@@ -88,6 +90,14 @@ function windCategory(kmh) {
   return { key: "very-strong", label: "Very strong wind" };
 }
 
+function uvCategory(uv) {
+  if (uv < 3) return "Low";
+  if (uv < 6) return "Moderate";
+  if (uv < 8) return "High";
+  if (uv < 11) return "Very High";
+  return "Extreme";
+}
+
 function getSeason(date, tz) {
   const month = Number(
     new Intl.DateTimeFormat("en-AU", { timeZone: tz, month: "numeric" }).format(date)
@@ -143,6 +153,75 @@ function daysUntilLabel(dateStr, todayStr) {
   return `In ${diffDays} days`;
 }
 
+function icsEscape(text) {
+  return String(text)
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\n/g, "\\n");
+}
+
+function foldIcsLine(line) {
+  if (line.length <= 75) return line;
+  let result = line.slice(0, 75);
+  let rest = line.slice(75);
+  while (rest.length > 0) {
+    result += `\r\n ${rest.slice(0, 74)}`;
+    rest = rest.slice(74);
+  }
+  return result;
+}
+
+function addDaysToISODate(dateStr, days) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function buildShootICS(shoot) {
+  const dtStart = shoot.date.replace(/-/g, "");
+  const dtEnd = addDaysToISODate(shoot.date, 1).replace(/-/g, "");
+  const dtStamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const uid = `${dtStart}-${shoot.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}@kgsa-shoot-conditions`;
+
+  const descriptionParts = [];
+  if (shoot.arrows) descriptionParts.push(`${shoot.arrows} arrows`);
+  if (shoot.distance) descriptionParts.push(shoot.distance);
+  if (shoot.face) descriptionParts.push(`Face size: ${shoot.face}cm`);
+
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//KGSA Shoot Conditions//EN",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${dtStamp}`,
+    `DTSTART;VALUE=DATE:${dtStart}`,
+    `DTEND;VALUE=DATE:${dtEnd}`,
+    `SUMMARY:${icsEscape(shoot.name)}`,
+    `LOCATION:${icsEscape(CLUB.name)}`,
+  ];
+  if (descriptionParts.length > 0) {
+    lines.push(`DESCRIPTION:${icsEscape(descriptionParts.join(" — "))}`);
+  }
+  lines.push("END:VEVENT", "END:VCALENDAR");
+
+  return lines.map(foldIcsLine).join("\r\n") + "\r\n";
+}
+
+function downloadShootICS(shoot) {
+  const blob = new Blob([buildShootICS(shoot)], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `KGSA-${shoot.date}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function renderUpcomingShoots() {
   const todayStr = localISODate(new Date(), CLUB.timezone);
   const upcoming = KGSA_SHOOTS.filter((s) => s.date >= todayStr).slice(0, 2);
@@ -187,6 +266,13 @@ function renderUpcomingShoots() {
       face.textContent = `Face size: ${shoot.face}cm`;
       tile.appendChild(face);
     }
+
+    const icsBtn = document.createElement("button");
+    icsBtn.type = "button";
+    icsBtn.className = "ics-btn";
+    icsBtn.textContent = "Add to calendar";
+    icsBtn.addEventListener("click", () => downloadShootICS(shoot));
+    tile.appendChild(icsBtn);
 
     els.shootsList.appendChild(tile);
   }
@@ -465,11 +551,22 @@ async function loadWeather() {
     els.windDir.textContent = `${degreesToCompass(windDeg)} (${Math.round(windDeg)}°)`;
     els.temperature.textContent = `${Math.round(tempC)}°C`;
 
+    const now = new Date();
+    const nowHour = localHour(now, CLUB.timezone);
+    const hourIdx = data.hourly.time.findIndex((t) => Number(t.slice(11, 13)) === nowHour);
+    if (hourIdx !== -1) {
+      const uv = data.hourly.uv_index[hourIdx];
+      const rainChance = data.hourly.precipitation_probability[hourIdx];
+      els.uvIndex.textContent = `${Math.round(uv)} (${uvCategory(uv)})`;
+      els.rainChance.textContent = `${Math.round(rainChance)}%`;
+    } else {
+      els.uvIndex.textContent = "--";
+      els.rainChance.textContent = "--";
+    }
+
     els.weatherStatus.textContent = `Updated ${new Date().toLocaleTimeString("en-AU", { timeZone: CLUB.timezone, hour12: false })}`;
     els.weatherGrid.hidden = false;
 
-    const now = new Date();
-    const nowHour = localHour(now, CLUB.timezone);
     const sunriseHour = localHour(new Date(sunriseISO), CLUB.timezone);
     const sunsetHour = localHour(new Date(sunsetISO), CLUB.timezone);
     const isDaylight = nowHour >= sunriseHour && nowHour < sunsetHour;

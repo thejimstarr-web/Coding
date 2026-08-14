@@ -105,7 +105,7 @@ body {
 
 .weather-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin: 14px 0;
 }
@@ -224,6 +224,22 @@ body {
   font-size: 0.85rem;
   color: var(--muted);
   margin: 2px 0;
+}
+
+.ics-btn {
+  margin-top: 8px;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.ics-btn:hover {
+  background: var(--accent);
+  color: #fff;
 }
 
 @media (max-width: 480px) {
