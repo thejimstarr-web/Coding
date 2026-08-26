@@ -13,7 +13,8 @@ A simple static web app for the club that:
   highlights the best 2-hour window to shoot.
 - Lets you pick your bow type (recurve / compound / barebow / longbow) for
   wind-based advice tailored to whatever shoot is actually next on the
-  calendar (its name, date, arrows and distances), not a generic round.
+  calendar, including a best-effort guess at that bow's distance (see
+  "Bow-to-distance guess" below).
 - Shows the next two upcoming KGSA shoots from the club's 2026 calendar,
   which automatically advance as each date passes, with an "Add to
   calendar" button that downloads a `.ics` file for each one.
@@ -68,6 +69,17 @@ outdoor distances (90/70/60/50/40/30m) and the 18m/25m indoor distances.
 
 This is general club-level guidance, not an official ruling — always
 follow your Range Officer's call on the day.
+
+## Bow-to-distance guess
+
+Each shoot's `distance` field lists its named sub-rounds separated by
+`;`, consistently ordered longest to shortest (e.g. "Long Sydney
+90/70/60/50m; Sydney 70/60/50/40m; Short Sydney ...; Junior Sydney ...").
+There's no single rule mapping bow type to a tier — the club's own notes
+say "round depends on archer/class" (age and gender matter too) — so the
+app makes a labeled, best-effort guess: recurve gets the longest tier,
+longbow the shortest, and compound/barebow step in between. It's flagged
+in the UI as "typical — confirm with your Range Officer", not a ruling.
 
 ## Updating the shoot calendar
 

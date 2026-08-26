@@ -451,6 +451,35 @@ const BOW_WIND_ADVICE = {
   },
 };
 
+/* Every shoot's "distance" field lists its named sub-rounds separated by
+   ";", consistently ordered longest to shortest (e.g. "Long Sydney
+   90/70/60/50m; Sydney 70/60/50/40m; Short Sydney ..."). There's no single
+   deterministic rule mapping bow type to a tier — the calendar itself says
+   "round depends on archer/class" — so this only produces a labeled,
+   best-effort guess: recurve gets the longest tier, longbow the shortest,
+   compound/barebow step in between. */
+function parseDistanceTiers(distanceText) {
+  if (!distanceText) return null;
+  const noteMatch = distanceText.match(/\(([^)]*)\)\s*$/);
+  const withoutNote = noteMatch ? distanceText.slice(0, noteMatch.index).trim() : distanceText.trim();
+  const tiers = withoutNote
+    .split(";")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  return tiers.length >= 2 ? tiers : null;
+}
+
+function pickTierForBow(bow, tiers) {
+  const lastIdx = tiers.length - 1;
+  const indexByBow = {
+    recurve: 0,
+    compound: Math.min(1, lastIdx),
+    barebow: Math.min(2, lastIdx),
+    longbow: lastIdx,
+  };
+  return tiers[indexByBow[bow]];
+}
+
 function buildBowShootAdvice(bow, windCat, shoot) {
   const bowLabel = BOW_LABELS[bow];
   const windAdvice = BOW_WIND_ADVICE[bow][windCat.key];
@@ -463,15 +492,24 @@ function buildBowShootAdvice(bow, windCat, shoot) {
     );
   }
 
-  const details = [];
-  if (shoot.arrows) details.push(`${shoot.arrows} arrows`);
-  if (shoot.distance) details.push(shoot.distance);
-  const detailText = details.length > 0 ? ` (${details.join(" — ")})` : "";
+  const parts = [];
+  let header = `Next shoot: <strong>${shoot.name}</strong> on ${formatShootDate(shoot.date)}`;
+  if (shoot.arrows) header += ` (${shoot.arrows} arrows)`;
+  parts.push(`${header}.`);
 
-  return (
-    `Next shoot: <strong>${shoot.name}</strong> on ${formatShootDate(shoot.date)}${detailText}. ` +
-    `${bowLabel} archers, given today's ${conditions}: ${windAdvice}`
-  );
+  const tiers = parseDistanceTiers(shoot.distance);
+  if (tiers) {
+    const tier = pickTierForBow(bow, tiers);
+    parts.push(
+      `Likely ${bowLabel.toLowerCase()} distance (typical — confirm with your Range Officer): <strong>${tier}</strong>.`
+    );
+  } else if (shoot.distance) {
+    parts.push(`Distances on offer: ${shoot.distance}`);
+  }
+
+  parts.push(`${bowLabel} archers, given today's ${conditions}: ${windAdvice}`);
+
+  return parts.join(" ");
 }
 
 function renderBowResult(bow) {
