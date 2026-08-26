@@ -12,8 +12,8 @@ A simple static web app for the club that:
 - Shows an hourly wind outlook for the rest of today's daylight hours and
   highlights the best 2-hour window to shoot.
 - Lets you pick your bow type (recurve / compound / barebow / longbow) for
-  a personalised distance and World Archery round suggestion given the
-  current wind.
+  wind-based advice tailored to whatever shoot is actually next on the
+  calendar (its name, date, arrows and distances), not a generic round.
 - Shows the next two upcoming KGSA shoots from the club's 2026 calendar,
   which automatically advance as each date passes, with an "Add to
   calendar" button that downloads a `.ics` file for each one.

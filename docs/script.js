@@ -52,6 +52,7 @@ const state = {
   tempC: null,
   isDaylight: null,
   selectedBow: null,
+  upcomingShoots: [],
 };
 
 /* ---------------- Clock ---------------- */
@@ -225,6 +226,8 @@ function downloadShootICS(shoot) {
 function renderUpcomingShoots() {
   const todayStr = localISODate(new Date(), CLUB.timezone);
   const upcoming = KGSA_SHOOTS.filter((s) => s.date >= todayStr).slice(0, 2);
+  state.upcomingShoots = upcoming;
+  if (state.selectedBow && state.windCat) renderBowResult(state.selectedBow);
 
   els.shootsList.innerHTML = "";
 
@@ -415,45 +418,65 @@ const BOW_LABELS = {
   longbow: "Longbow",
 };
 
-function buildRoundSuggestion(bow, windCat) {
-  const table = {
-    recurve: {
-      calm: "Full WA1440 or WA70 (70/60/50/30m) — great conditions for a long-distance round.",
-      light: "WA70 (70/60/50/30m) — still very shootable at full distance.",
-      moderate: "WA900 (60/50/40m) — step in from 70m if grouping opens up.",
-      strong: "30m practice only, or move to indoor 18m.",
-      "very-strong": "Indoor 18m round recommended.",
-    },
-    compound: {
-      calm: "Full WA1440 (50m) or WA70 (50m) — ideal precision conditions.",
-      light: "WA70 (50m) — holding steady.",
-      moderate: "WA900 (50/40/30m) — still comfortable for compound.",
-      strong: "50m with full stabilisation, or indoor 18m if the squad wants consistency.",
-      "very-strong": "Indoor 18m round recommended.",
-    },
-    barebow: {
-      calm: "WA900 (60/50/40m) or a full barebow round at 50m.",
-      light: "50m round — comfortable conditions.",
-      moderate: "Step in to 40/30m — drift builds quickly without sights.",
-      strong: "30m practice only.",
-      "very-strong": "Indoor 18m round recommended.",
-    },
-    longbow: {
-      calm: "Traditional round at 50/40/30m.",
-      light: "50/40/30m — pleasant conditions.",
-      moderate: "30m practice — expect real drift at longer distances.",
-      strong: "Not recommended outdoors — indoor 18m or stand down.",
-      "very-strong": "Indoor 18m round recommended, or stand the session down.",
-    },
-  };
-  return table[bow][windCat.key];
+/* Wind-driven guidance per bow type, phrased distance-agnostically so it
+   applies whatever round is actually on the calendar for the next shoot. */
+const BOW_WIND_ADVICE = {
+  recurve: {
+    calm: "Great conditions to shoot the longest distance you're eligible for.",
+    light: "Still very shootable at full distance, with only slight drift expected.",
+    moderate: "Consider stepping in to a shorter distance if your grouping opens up.",
+    strong: "Outdoor scoring will be tough — stick to the shortest distance on offer or ask about moving indoors.",
+    "very-strong": "Not recommended outdoors today — check with your Range Officer about an indoor option.",
+  },
+  compound: {
+    calm: "Ideal precision conditions at any distance offered.",
+    light: "Should hold steady at full distance.",
+    moderate: "Should still handle the full distance comfortably with good form.",
+    strong: "Usable with full stabilisation, but expect gusts to affect your aim.",
+    "very-strong": "Not recommended outdoors today — check with your Range Officer about an indoor option.",
+  },
+  barebow: {
+    calm: "Great conditions to shoot the longest distance you're eligible for.",
+    light: "Comfortable at full distance.",
+    moderate: "Drift builds quickly without sights — consider a shorter distance.",
+    strong: "Step down to the shortest distance on offer today.",
+    "very-strong": "Not recommended outdoors today — check with your Range Officer about an indoor option.",
+  },
+  longbow: {
+    calm: "Pleasant conditions for a traditional round at full distance.",
+    light: "Comfortable conditions at full distance.",
+    moderate: "Expect real drift — a shorter distance is a good call.",
+    strong: "Not recommended outdoors in this wind.",
+    "very-strong": "Not recommended outdoors today — check with your Range Officer about an indoor option.",
+  },
+};
+
+function buildBowShootAdvice(bow, windCat, shoot) {
+  const bowLabel = BOW_LABELS[bow];
+  const windAdvice = BOW_WIND_ADVICE[bow][windCat.key];
+  const conditions = `${windCat.label.toLowerCase()} conditions`;
+
+  if (!shoot) {
+    return (
+      `${bowLabel} archers — no upcoming shoot is on the calendar yet. ` +
+      `Given today's ${conditions}: ${windAdvice}`
+    );
+  }
+
+  const details = [];
+  if (shoot.arrows) details.push(`${shoot.arrows} arrows`);
+  if (shoot.distance) details.push(shoot.distance);
+  const detailText = details.length > 0 ? ` (${details.join(" — ")})` : "";
+
+  return (
+    `Next shoot: <strong>${shoot.name}</strong> on ${formatShootDate(shoot.date)}${detailText}. ` +
+    `${bowLabel} archers, given today's ${conditions}: ${windAdvice}`
+  );
 }
 
 function renderBowResult(bow) {
   if (!bow || !state.windCat) return;
-  const suggestion = buildRoundSuggestion(bow, state.windCat);
-  els.bowResult.innerHTML =
-    `<strong>${BOW_LABELS[bow]}</strong> in current ${state.windCat.label.toLowerCase()}: ${suggestion}`;
+  els.bowResult.innerHTML = buildBowShootAdvice(bow, state.windCat, state.upcomingShoots[0]);
 }
 
 /* ---------------- Hourly outlook ---------------- */
