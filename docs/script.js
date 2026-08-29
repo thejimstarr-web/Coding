@@ -383,18 +383,26 @@ function buildDistanceRecommendations(windCat) {
   }
 }
 
-function buildWeatherVerdict(windCat, tempC) {
-  if (windCat.key === "very-strong") {
-    return { level: "bad", text: "Wind is too strong for outdoor shooting — move indoors or stand down." };
+/* Wind speed/gust thresholds (km/h) that flip the verdict to "bad" —
+   above this, arrows drift significantly and it's hard to hold steady. */
+const BAD_WIND_KMH = 32;
+const BAD_GUST_KMH = 40;
+
+function buildWeatherVerdict(windKmh, gustKmh, tempC) {
+  if (windKmh >= BAD_WIND_KMH || gustKmh > BAD_GUST_KMH) {
+    return {
+      level: "bad",
+      text: "Wind is too strong for good shooting — arrows will drift significantly and it's hard to hold steady. Move indoors or stand down.",
+    };
   }
   if (tempC !== null && tempC >= 38) {
     return { level: "bad", text: "Extreme heat — high risk of heat stress, postpone outdoor shooting." };
   }
-  if (windCat.key === "strong" || (tempC !== null && tempC >= 34)) {
-    return { level: "ok", text: "Shootable with adjustments — shorten distances and stay hydrated." };
-  }
-  if (windCat.key === "moderate") {
-    return { level: "ok", text: "Good shooting conditions with minor adjustments for wind." };
+  if (windKmh > 15 || (tempC !== null && tempC >= 34)) {
+    return {
+      level: "ok",
+      text: "Noticeable wind — expect arrow drift past 30–40m. Adjust your aim or shorten your distance.",
+    };
   }
   return { level: "good", text: "Great wind and temperature for outdoor shooting." };
 }
@@ -638,7 +646,7 @@ async function loadWeather() {
 
     const windCat = windCategory(windKmh);
     const season = getSeason(now, CLUB.timezone);
-    const weatherVerdict = buildWeatherVerdict(windCat, tempC);
+    const weatherVerdict = buildWeatherVerdict(windKmh, gustKmh, tempC);
     const daylightVerdict = buildDaylightVerdict(isDaylight, sunriseISO, sunsetISO);
 
     els.weatherVerdictBadge.textContent = `${windCat.label} · ${weatherVerdict.level.toUpperCase()}`;

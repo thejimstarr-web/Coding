@@ -62,6 +62,14 @@ Wind bands (10m wind speed, km/h):
 | Strong | 25–35 | Outdoor scoring not advised for recurve/barebow/longbow; short distances or indoor recommended |
 | Very strong | ≥ 35 | Outdoor shooting not recommended for any bow type |
 
+These bands drive the bow-type and distance recommendation lists. The
+"Wind & weather" verdict badge uses its own, stricter rule: it flips to
+**BAD** once wind reaches 32 km/h *or* gusts exceed 40 km/h (whichever
+comes first), since a gusty-but-moderate-average day can be just as
+unshootable as a steadily strong one — below that it's **OK** past 15 km/h
+("noticeable drift, adjust aim or shorten distance"), and **GOOD** at or
+under 15 km/h.
+
 Shooting-time suggestions vary by season (Southern Hemisphere: summer
 Dec–Feb, winter Jun–Aug) to steer around Perth's midday summer heat and
 short winter daylight. Distance suggestions follow standard World Archery
