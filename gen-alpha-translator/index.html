@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English to Gen Alpha Translator</title>
+<style>
+  :root { --bg:#f6f4ff; --card:#fff; --ink:#1d1b2e; --muted:#6b6785; --accent:#6c4cff; --line:#e2defa; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14121f; --card:#1e1b30; --ink:#f0eeff; --muted:#9d99b8; --accent:#8f78ff; --line:#33304d; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,sans-serif; }
+  .app { max-width:720px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { margin:0 0 4px; font-size:1.6rem; }
+  .sub { margin:0 0 20px; color:var(--muted); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  label, .label { display:block; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:6px; }
+  textarea, .out { width:100%; min-height:120px; padding:12px; border:1px solid var(--line); border-radius:8px;
+    background:transparent; color:inherit; font:inherit; resize:vertical; }
+  .out { white-space:pre-wrap; min-height:120px; }
+  .out.empty { color:var(--muted); }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+  select, button { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .spacer { flex:1; }
+  small { color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>English → Gen Alpha</h1>
+  <p class="sub">Type normal English, get slang. Rule-based, so it swaps known words and phrases rather than understanding you.</p>
+
+  <section class="card">
+    <label for="input">English</label>
+    <textarea id="input" placeholder="e.g. Hey friend, what's up? That is cool, no joke."></textarea>
+    <div class="row">
+      <label for="level" style="margin:0">Intensity</label>
+      <select id="level">
+        <option value="1">1 – Light</option>
+        <option value="2" selected>2 – Medium</option>
+        <option value="3">3 – Maximum brainrot</option>
+      </select>
+      <span class="spacer"></span>
+      <button id="example" type="button">Try an example</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="label">Gen Alpha</div>
+    <div id="output" class="out empty" aria-live="polite">Your translation shows up here.</div>
+    <div class="row">
+      <button id="copy" class="primary" type="button">Copy</button>
+      <small id="status"></small>
+    </div>
+  </section>
+</div>
+<script src="translator.js"></script>
+<script>
+  const input = document.getElementById('input');
+  const level = document.getElementById('level');
+  const output = document.getElementById('output');
+  const status = document.getElementById('status');
+  const EXAMPLES = [
+    "Hey friend, what's up? That is cool. No joke, this pizza is delicious.",
+    "I think you are wrong. That movie was really boring and honestly kind of embarrassing.",
+    "Good job on the test! You are the best. I love how confident you are.",
+    "I am so tired. Let me do my thing, and please stop lying to me."
+  ];
+  let exampleNo = 0;
+
+  function render() {
+    const text = input.value;
+    if (!text.trim()) {
+      output.textContent = 'Your translation shows up here.';
+      output.classList.add('empty');
+      return;
+    }
+    output.classList.remove('empty');
+    output.textContent = GenAlpha.translate(text, Number(level.value));
+  }
+
+  input.addEventListener('input', render);
+  level.addEventListener('change', render);
+  document.getElementById('example').addEventListener('click', () => {
+    input.value = EXAMPLES[exampleNo++ % EXAMPLES.length];
+    render();
+  });
+  document.getElementById('copy').addEventListener('click', async () => {
+    if (output.classList.contains('empty')) return;
+    try {
+      await navigator.clipboard.writeText(output.textContent);
+      status.textContent = 'Copied.';
+    } catch (e) {
+      status.textContent = 'Copy failed. Select the text manually.';
+    }
+    setTimeout(() => (status.textContent = ''), 2000);
+  });
+</script>
+</body>
+</html>
